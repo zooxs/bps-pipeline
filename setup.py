@@ -14,12 +14,12 @@ with open(path.join(HERE, "README.md"), encoding="utf-8") as f:
 
 # This call to setup() does all the work
 setup(
-    name="bps_parse",
+    name="bps-pipeline",
     version="0.1.0",
     description="BPS Pipeline tools for cleaning, extracting and transforming BPS's data.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://medium-multiply.readthedocs.io/",
+    url="https://bps-pipeline.readthedocs.io/",
     author="Pandu Mulya Muhammad Syah",
     author_email="zooxsjrto1@gmail.com",
     license="MIT",
