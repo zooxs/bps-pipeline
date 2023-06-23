@@ -47,7 +47,7 @@ class BPSData:
         elif self.extension == "xlsx":
             self.readData = read_excel(self.fileName)
 
-        # Set data attributs such as its title, region, group & unit
+        # Set data attributes such as its title, region, group & unit
         self.region = self.readData.columns[0]
 
         """
@@ -66,6 +66,20 @@ class BPSData:
             self.title = self.readData.columns[1]
             self.group = self.separator.join(self.title.split(self.separator)[1:])
 
+        # Check if the Group more than 2 letters.
+        groupMaxLetterLength = 2
+        if len(self.group.split(self.separator)) > groupMaxLetterLength:
+            self.group = self.separator.join(
+                self.group.split(self.separator)[:groupMaxLetterLength]
+            )
+
+        # Check if the Title more than 3 letters.
+        titleMaxLetterLength = 3
+        if len(self.title.split(self.separator)) > titleMaxLetterLength:
+            self.title = self.separator.join(
+                self.title.split(self.separator)[:titleMaxLetterLength]
+            )
+
         # Remove the data footer & make list of region.
         self.readData = self.readData.iloc[:-5]
         self.listRegion = self.readData[self.region].dropna().values
@@ -82,7 +96,7 @@ class BPSData:
 
         # Drop the region columns, drop rows that contain nan value & replace '-' with '0' value.
         self.oldColumns = self.readData.columns[1:]
-        self.readData = self.readData.dropna(axis=0)[self.oldColumns].replace("-", "0")
+        self.readData = self.readData.dropna(axis=0)[self.oldColumns].replace("-", None)
 
     def pipeline(self):
         """
@@ -142,6 +156,36 @@ class BPSData:
 
         else:
             return result
+
+    def groupedExport(self, pathOutPut="./", groupBy="region"):
+        groupedDf = self.pipeline().groupby(by=[self.region])
+        getRegion = (
+            # lambda Region: f"{pathOutPut}{self.title}-{Region[0]}-{self.year[0]}_{self.year[-1]}.csv"
+            lambda Region: Region[0]
+        )
+        listRegion = groupedDf[self.region].unique().apply(getRegion).values
+        for regionName in listRegion:
+            from pathlib import Path
+
+            exportFileName = f"{pathOutPut}{self.title}-{regionName}-{self.year[0]}_{self.year[-1]}.csv"
+            filePath = Path(exportFileName)
+            filePath.parent.mkdir(parents=True, exist_ok=True)
+            groupedDf.get_group(regionName).to_csv(exportFileName, index=False)
+        # for typeBasedDf in groupedDf:
+        #     from pathlib import Path
+        #     exportFileName = f"{pathOutPut}{self.title}-{typeBasedDf[0]}-{self.year[0]}_{self.year[-1]}.csv"
+        #     filePath = Path(exportFileName)
+        #     filePath.parent.mkdir(parents=True, exist_ok=True)
+        #     typeBasedDf[1].to_csv(exportFileName, index=False)
+
+        # def exportData(groupedData):
+        #     from pathlib import Path
+        #     exportFileName = f"{pathOutPut}{self.title}-{groupedData[0]}-{self.year[0]}_{self.year[-1]}.csv"
+        #     filePath = Path(exportFileName)
+        #     filePath.parent.mkdir(parents=True, exist_ok=True)
+        #     groupedData[1].to_csv(exportFileName, index=False)
+
+        # groupedDf.apply(exportData)
 
 
 @dataclass
