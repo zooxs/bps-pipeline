@@ -158,34 +158,33 @@ class BPSData:
             return result
 
     def groupedExport(self, pathOutPut="./", groupBy="region"):
-        groupedDf = self.pipeline().groupby(by=[self.region])
-        getRegion = (
-            # lambda Region: f"{pathOutPut}{self.title}-{Region[0]}-{self.year[0]}_{self.year[-1]}.csv"
-            lambda Region: Region[0]
-        )
-        listRegion = groupedDf[self.region].unique().apply(getRegion).values
-        for regionName in listRegion:
+        """
+        Method for exporting based on key group that is choosed.
+
+        :param pathOutPut: Output path location for result. Default value is the current directory. If the locatin didn't exist, it automaticly created.
+        :param groupBy: Column name that grouped data. Default value is region name.
+        """
+        data = self.pipeline()
+        keyColumn = None
+        if groupBy == "region":
+            keyColumn = data.columns[0]
+        elif groupBy == "type":
+            keyColumn = data.columns[2]
+        else:
+            print(f"{groupBy} not recoqnaized!!!")
+            return None
+        groupedDf = data.groupby(by=[keyColumn])
+        getKey = lambda Key: Key[0]
+        listKey = groupedDf[keyColumn].unique().apply(getKey).values
+        for keyName in listKey:
             from pathlib import Path
 
-            exportFileName = f"{pathOutPut}{self.title}-{regionName}-{self.year[0]}_{self.year[-1]}.csv"
+            exportFileName = (
+                f"{pathOutPut}{self.title}-{keyName}-{self.year[0]}_{self.year[-1]}.csv"
+            )
             filePath = Path(exportFileName)
             filePath.parent.mkdir(parents=True, exist_ok=True)
-            groupedDf.get_group(regionName).to_csv(exportFileName, index=False)
-        # for typeBasedDf in groupedDf:
-        #     from pathlib import Path
-        #     exportFileName = f"{pathOutPut}{self.title}-{typeBasedDf[0]}-{self.year[0]}_{self.year[-1]}.csv"
-        #     filePath = Path(exportFileName)
-        #     filePath.parent.mkdir(parents=True, exist_ok=True)
-        #     typeBasedDf[1].to_csv(exportFileName, index=False)
-
-        # def exportData(groupedData):
-        #     from pathlib import Path
-        #     exportFileName = f"{pathOutPut}{self.title}-{groupedData[0]}-{self.year[0]}_{self.year[-1]}.csv"
-        #     filePath = Path(exportFileName)
-        #     filePath.parent.mkdir(parents=True, exist_ok=True)
-        #     groupedData[1].to_csv(exportFileName, index=False)
-
-        # groupedDf.apply(exportData)
+            groupedDf.get_group(keyName).to_csv(exportFileName, index=False)
 
 
 @dataclass

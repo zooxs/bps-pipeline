@@ -9,10 +9,10 @@ tesParseExcel = BPSData(fileName1)
 tesParseCsv = BPSData(fileName2, separator="_")
 
 # print(tesParseExcel.pipeline())
-groupedResult = tesParseCsv.pipeline().groupby(by=["Kabupaten/Kota"])
-getRegion = lambda Region: Region[0]
+# print(tesParseCsv.pipeline().columns)
+
 
 # print(groupedResult["Kabupaten/Kota"].unique().apply(getRegion).values)
-tesParseCsv.groupedExport(pathOutPut="data/output/csv/test_group/")
+tesParseCsv.groupedExport(pathOutPut="data/output/csv/test_type/", groupBy="type")
 # testBulkParse = BulkParse("data/input/csv/*csv", "data/output/csv/", separator="_", export=True)
 # testBulkParse.combineResult()

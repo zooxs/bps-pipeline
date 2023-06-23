@@ -2,3 +2,4 @@ pandas
 glob
 typing
 dataclass
+pathlib
