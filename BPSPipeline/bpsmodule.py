@@ -170,6 +170,7 @@ class BPSData:
         if self.fullResult == True:
             df = self.pipeline()["data"]
 
+        # Set column's key to grouped dataframe
         keyColumn = None
         if groupBy == "region":
             keyColumn = df.columns[0]
@@ -178,12 +179,21 @@ class BPSData:
         else:
             print(f"{groupBy} not recoqnaized!!!")
             return None
+
+        # Create Groupby object based on column's key
         groupedDf = df.groupby(by=[keyColumn])
+
+        # Set function to get key value from grouby object
         getKey = lambda Key: Key[0]
+
+        # Set list value of column's keys
         listKey = groupedDf[keyColumn].unique().apply(getKey).values
+
+        # Iterates for each key value to export in each coresponding file
         for keyName in listKey:
             from pathlib import Path
 
+            # Set file name for exported file.
             exportFileName = (
                 f"{pathOutPut}{self.title}-{keyName}-{self.year[0]}_{self.year[-1]}.csv"
             )
@@ -240,3 +250,8 @@ class BulkParse:
             else:
                 listCombinedDf.append(combineDf)
         return listCombinedDf
+
+
+@dataclass
+class DataFrame2BPS:
+    data: DataFrame
