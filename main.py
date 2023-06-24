@@ -8,11 +8,13 @@ fileName2 = "data/input/csv/dataset4.csv"
 tesParseExcel = BPSData(fileName1)
 tesParseCsv = BPSData(fileName2, separator="_")
 
-# print(tesParseExcel.pipeline())
-# print(tesParseCsv.pipeline().columns)
 
+# groupedExport(
+#     tesParseExcel, pathOutPut="data/output/excel/test_region/", groupBy="region"
+# )
 
-# print(groupedResult["Kabupaten/Kota"].unique().apply(getRegion).values)
-tesParseCsv.groupedExport(pathOutPut="data/output/csv/test_type/", groupBy="type")
-# testBulkParse = BulkParse("data/input/csv/*csv", "data/output/csv/", separator="_", export=True)
-# testBulkParse.combineResult()
+testBulkParse = BulkParse(
+    "data/input/csv/*csv", "data/output/csv/", separator="_", export=False
+)
+
+print(tesParseCsv.comodity)

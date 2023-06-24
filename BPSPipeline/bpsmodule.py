@@ -1,4 +1,4 @@
-from pandas import read_csv, read_excel, concat
+from pandas import read_csv, read_excel, concat, DataFrame
 from glob import glob
 from typing import ClassVar
 from dataclasses import dataclass
@@ -152,39 +152,12 @@ class BPSData:
             return {
                 "group": self.group,
                 "data": result,
+                "title": self.title,
+                "year": self.year,
             }
 
         else:
             return result
-
-    def groupedExport(self, pathOutPut="./", groupBy="region"):
-        """
-        Method for exporting based on key group that is choosed.
-
-        :param pathOutPut: Output path location for result. Default value is the current directory. If the locatin didn't exist, it automaticly created.
-        :param groupBy: Column name that grouped data. Default value is region name.
-        """
-        data = self.pipeline()
-        keyColumn = None
-        if groupBy == "region":
-            keyColumn = data.columns[0]
-        elif groupBy == "type":
-            keyColumn = data.columns[2]
-        else:
-            print(f"{groupBy} not recoqnaized!!!")
-            return None
-        groupedDf = data.groupby(by=[keyColumn])
-        getKey = lambda Key: Key[0]
-        listKey = groupedDf[keyColumn].unique().apply(getKey).values
-        for keyName in listKey:
-            from pathlib import Path
-
-            exportFileName = (
-                f"{pathOutPut}{self.title}-{keyName}-{self.year[0]}_{self.year[-1]}.csv"
-            )
-            filePath = Path(exportFileName)
-            filePath.parent.mkdir(parents=True, exist_ok=True)
-            groupedDf.get_group(keyName).to_csv(exportFileName, index=False)
 
 
 @dataclass
@@ -205,10 +178,13 @@ class BulkParse:
 
     def __post_init__(self):
         self.listFile = glob(self.pathInput)
-        self.listData = list(
-            BPSData(fileName, separator=self.separator, fullResult=True).pipeline()
+        self.listObj = list(
+            BPSData(fileName, separator=self.separator, fullResult=True)
             for fileName in self.listFile
         )
+
+        self.listData = list(obj.pipeline() for obj in self.listObj)
+        self.listUniqueGroup = set([Df["group"] for Df in self.listData])
 
     def combineResult(self):
         """
@@ -218,15 +194,50 @@ class BulkParse:
         :return: Return none or empty list, instead export aggregated data as csv files.
         """
         listCombinedDf = []
-        listUniqueGroup = set([Df["group"] for Df in self.listData])
-        for id, uniqueGroup in enumerate(listUniqueGroup):
+        for id, uniqueGroup in enumerate(self.listUniqueGroup):
             sameDf = [Df["data"] for Df in self.listData if Df["group"] == uniqueGroup]
-            fileNames = f"{self.pathOutput}/Combine_Result_{id}.csv"
+            fileName = f"{self.pathOutput}/Combine_Result_{id}.csv"
             combineDf = concat(sameDf, axis=1)
             combineDf = combineDf[sorted(combineDf.columns)]
             if self.export == True:
-                combineDf.to_csv(fileNames)
-                break
+                combineDf.to_csv(fileName)
+
             else:
                 listCombinedDf.append(combineDf)
         return listCombinedDf
+
+
+def groupedExport(data: BPSData, pathOutPut="./", groupBy="region"):
+    """
+    Method for exporting based on key group that is choosed.
+
+    :param pathOutPut: Output path location for result. Default value is the current directory. If the locatin didn't exist, it automaticly created.
+    :param groupBy: Column name that grouped data. Default value is region name.
+    """
+
+    df = data.pipeline()
+
+    keyColumn = None
+    if groupBy == "region":
+        keyColumn = df.columns[0]
+    elif groupBy == "type":
+        keyColumn = df.columns[2]
+    else:
+        print(f"{groupBy} not recoqnaized!!!")
+        return None
+    groupedDf = df.groupby(by=[keyColumn])
+    getKey = lambda Key: Key[0]
+    listKey = groupedDf[keyColumn].unique().apply(getKey).values
+    for keyName in listKey:
+        from pathlib import Path
+
+        exportFileName = (
+            f"{pathOutPut}{data.title}-{keyName}-{data.year[0]}_{data.year[-1]}.csv"
+        )
+        filePath = Path(exportFileName)
+        filePath.parent.mkdir(parents=True, exist_ok=True)
+        groupedDf.get_group(keyName).to_csv(exportFileName, index=False)
+
+
+def dfToBps():
+    ...
