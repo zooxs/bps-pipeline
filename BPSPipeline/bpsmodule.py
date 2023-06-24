@@ -250,8 +250,3 @@ class BulkParse:
             else:
                 listCombinedDf.append(combineDf)
         return listCombinedDf
-
-
-@dataclass
-class DataFrame2BPS:
-    data: DataFrame
